@@ -1,0 +1,51 @@
+package com.nssc.zookeeper.axiom;
+
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.Watcher.Event.KeeperState;
+
+public class CreateGroup implements Watcher{
+	private static final int SESSION_TIMEOUT=5000;
+	
+	private ZooKeeper zk;
+	//等待其他任务执行，当计数器为0时程序继续
+	private CountDownLatch counectedSignal = new CountDownLatch(1);
+	
+	/**
+	 * 初始化链接
+	 * @param hosts zookeeper的主机名或地址
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public void connect(String hosts) throws IOException, InterruptedException {
+		/**
+		 * function:维护客户端与zookeeper服务之间的链接
+		 * connectString:zookeeper的主机名或地址
+		 * sessionTimeout：链接超时时间
+		 * watcher:监听对象，以获得事件的通知
+		 */
+		zk = new ZooKeeper(hosts, SESSION_TIMEOUT, this);
+		//开始等待
+		counectedSignal.await();
+	}
+
+	@Override
+	public void process(WatchedEvent event) {
+		// TODO Auto-generated method stub	
+		//判断客户端是否链接
+		if (event.getState() == KeeperState.SyncConnected) {
+		counectedSignal.countDown();
+		}
+	}
+	
+	public static void main(String[] args) {
+		
+		// TODO Auto-generated method stub
+
+	}
+
+}
